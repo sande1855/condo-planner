@@ -57,7 +57,7 @@ with col2:
             ticker_data = yf.Ticker(stock_ticker)
             current_price = ticker_data.history(period="1d")['Close'].iloc[0]
             live_stock_value = current_price * stock_shares
-            st.success(f"Live {stock_ticker.upper()} Price: **${current_price:.2f}** | Total Value: **${live_stock_value:,.2f}**")
+            st.success(f"Live {stock_ticker.upper()} Price: **\${current_price:.2f}** | Total Value: **\${live_stock_value:,.2f}**")
         except:
             st.error("Could not fetch stock price. Check the ticker symbol.")
 
@@ -103,7 +103,11 @@ st.markdown("---")
 st.header("📊 4. Your Action Plan")
 st.write("")
 
-total_assets = current_savings + family_gift + live_stock_value + unvested_contribution + bonus_contribution
+# Split current vs future assets
+current_assets = current_savings + family_gift + live_stock_value
+future_assets = unvested_contribution + bonus_contribution
+total_assets = current_assets + future_assets
+
 amount_needed = max(0, target_amount - total_assets)
 
 if amount_needed == 0:
@@ -113,21 +117,22 @@ else:
     savings_per_paycheck = amount_needed / paychecks_remaining
     biweekly_free_cashflow = biweekly_net_pay - (monthly_expenses / 2)
     
-    # Dashboard style metric cards
-    col_res1, col_res2, col_res3 = st.columns(3)
+    # Dashboard style metric cards (Now 4 columns!)
+    col_res1, col_res2, col_res3, col_res4 = st.columns(4)
     col_res1.metric(label="🎯 Total Goal", value=f"${target_amount:,.0f}")
-    col_res2.metric(label="💰 Current & Future Assets", value=f"${total_assets:,.0f}")
-    col_res3.metric(label="📉 Amount Left to Save", value=f"${amount_needed:,.0f}")
+    col_res2.metric(label="💰 Current Assets", value=f"${current_assets:,.0f}")
+    col_res3.metric(label="📈 Future Assets", value=f"${future_assets:,.0f}")
+    col_res4.metric(label="📉 Amount Left to Save", value=f"${amount_needed:,.0f}")
     
     st.write("")
     st.write(f"**Paychecks Until Target Date:** {paychecks_remaining}")
     
-    st.info(f"### 👉 You need to save **${savings_per_paycheck:,.2f}** from each biweekly paycheck.")
+    st.info(f"### 👉 You need to save **\${savings_per_paycheck:,.2f}** from each biweekly paycheck.")
     
     if savings_per_paycheck > biweekly_free_cashflow:
-        st.warning(f"⚠️ **Warning:** Your needed savings (${savings_per_paycheck:,.2f}) exceed your estimated free cash flow per paycheck (${biweekly_free_cashflow:,.2f}). Consider extending your timeline or adjusting your goal.")
+        st.warning(f"⚠️ **Warning:** Your needed savings (\${savings_per_paycheck:,.2f}) exceed your estimated free cash flow per paycheck (\${biweekly_free_cashflow:,.2f}). Consider extending your timeline or adjusting your goal.")
     else:
-        st.success(f"✅ This looks doable! You will have about **${(biweekly_free_cashflow - savings_per_paycheck):,.2f}** left over for discretionary spending per paycheck.")
+        st.success(f"✅ This looks doable! You will have about **\${(biweekly_free_cashflow - savings_per_paycheck):,.2f}** left over for discretionary spending per paycheck.")
 
 # --- CHICAGO CONSIDERATIONS ---
 st.markdown("---")
@@ -136,13 +141,13 @@ st.write("")
 
 with st.expander("Click here to view important factors for buying in Chicago"):
     st.markdown("""
-    * **HOA Fees / Assessments:** In Chicago, high-rise HOAs are notoriously high (often $500 to $1,500+ a month). However, they usually include water, trash, snow removal, exterior maintenance, and often heat, AC, basic cable, and internet. Vintage walk-ups will have lower HOAs, but you'll pay your own utilities.
+    * **HOA Fees / Assessments:** In Chicago, high-rise HOAs are notoriously high (often \\$500 to \\$1,500+ a month). However, they usually include water, trash, snow removal, exterior maintenance, and often heat, AC, basic cable, and internet. Vintage walk-ups will have lower HOAs, but you'll pay your own utilities.
     
-    * **Special Assessments:** Older brick/limestone walk-ups (very common in Lakeview, Lincoln Park, Logan Square) often face facade repairs. If the condo association hasn't saved enough in their "reserves," they will issue a special assessment. You could be hit with a sudden $5,000–$20,000 bill. Always ask to see the reserve study before buying.
+    * **Special Assessments:** Older brick/limestone walk-ups (very common in Lakeview, Lincoln Park, Logan Square) often face facade repairs. If the condo association hasn't saved enough in their "reserves," they will issue a special assessment. You could be hit with a sudden \\$5,000–\\$20,000 bill. Always ask to see the reserve study before buying.
     
     * **Property Taxes (Cook County):** Chicago property taxes are high and paid *in arrears* (meaning you pay last year's taxes this year). They are billed in two installments, and the second installment is routinely delayed or significantly higher due to reassessments. Make sure your mortgage escrow over-prepares for this.
     
-    * **Deeded vs. Leased Parking:** Parking is rarely automatically included. A "deeded" parking spot means you own it, adding $15,000 to $40,000 to your purchase price, and it has its own property tax bill and HOA fee. Alternatively, you can lease a spot in the building (usually $150–$300/month).
+    * **Deeded vs. Leased Parking:** Parking is rarely automatically included. A "deeded" parking spot means you own it, adding \\$15,000 to \\$40,000 to your purchase price, and it has its own property tax bill and HOA fee. Alternatively, you can lease a spot in the building (usually \\$150–\\$300/month).
     
     * **Owner Occupancy Ratios:** If you ever plan to rent the condo out later, check the building's rental cap. Many Chicago condo boards strictly cap the number of units that can be rented out, which can put you on a years-long waitlist.
     """)
