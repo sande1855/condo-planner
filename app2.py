@@ -12,9 +12,13 @@ st.image("https://images.unsplash.com/photo-1494522855154-9297ac14b55f?q=80&w=20
 st.title("🏡 Condo Down Payment Planner")
 st.write("Map out your path to homeownership based on your timeline, assets, and salary.")
 
+st.write("") # Adds breathing room after the intro
+
 # --- 1. GOAL & TIMELINE (Editable Action Plan inputs) ---
 st.markdown("---")
 st.header("🎯 1. Your Goal & Timeline")
+st.write("")
+
 colA, colB = st.columns(2)
 target_amount = colA.number_input("Target Down Payment ($)", min_value=0, value=50000, step=1000)
 target_date = colB.date_input("Target Purchase Date", datetime.date.today() + datetime.timedelta(days=365))
@@ -26,12 +30,16 @@ paychecks_remaining = max(1, math.floor(days_remaining / 14))
 # --- 2. CURRENT FINANCES ---
 st.markdown("---")
 st.header("💰 2. Current Finances & Assets")
+st.write("")
+
 col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Income & Expenses")
     biweekly_net_pay = st.number_input("Biweekly Salary (Post-Tax)", min_value=0, value=3000)
     monthly_expenses = st.number_input("Current Monthly Expenses", min_value=0, value=4000)
+    
+    st.write("") # Spacer between subsections
     
     st.subheader("Cash Assets")
     current_savings = st.number_input("Current Savings Allocated", min_value=0, value=10000)
@@ -57,6 +65,7 @@ with col2:
 st.markdown("---")
 st.header("📈 3. Future Inflows")
 st.write("Add your expected future bonuses and unvested stock below. You can add as many rows as you need! *(Note: The math will only count funds that vest/payout **before** your Target Purchase Date).*")
+st.write("")
 
 col_table1, col_table2 = st.columns(2)
 
@@ -92,6 +101,7 @@ for index, row in bonus_df.iterrows():
 # --- 4. ACTION PLAN & RESULTS ---
 st.markdown("---")
 st.header("📊 4. Your Action Plan")
+st.write("")
 
 total_assets = current_savings + family_gift + live_stock_value + unvested_contribution + bonus_contribution
 amount_needed = max(0, target_amount - total_assets)
@@ -109,6 +119,7 @@ else:
     col_res2.metric(label="💰 Current & Future Assets", value=f"${total_assets:,.0f}")
     col_res3.metric(label="📉 Amount Left to Save", value=f"${amount_needed:,.0f}")
     
+    st.write("")
     st.write(f"**Paychecks Until Target Date:** {paychecks_remaining}")
     
     st.info(f"### 👉 You need to save **${savings_per_paycheck:,.2f}** from each biweekly paycheck.")
@@ -121,12 +132,17 @@ else:
 # --- CHICAGO CONSIDERATIONS ---
 st.markdown("---")
 st.header("🏙️ Chicago Condo Considerations")
+st.write("")
 
 with st.expander("Click here to view important factors for buying in Chicago"):
     st.markdown("""
     * **HOA Fees / Assessments:** In Chicago, high-rise HOAs are notoriously high (often $500 to $1,500+ a month). However, they usually include water, trash, snow removal, exterior maintenance, and often heat, AC, basic cable, and internet. Vintage walk-ups will have lower HOAs, but you'll pay your own utilities.
+    
     * **Special Assessments:** Older brick/limestone walk-ups (very common in Lakeview, Lincoln Park, Logan Square) often face facade repairs. If the condo association hasn't saved enough in their "reserves," they will issue a special assessment. You could be hit with a sudden $5,000–$20,000 bill. Always ask to see the reserve study before buying.
+    
     * **Property Taxes (Cook County):** Chicago property taxes are high and paid *in arrears* (meaning you pay last year's taxes this year). They are billed in two installments, and the second installment is routinely delayed or significantly higher due to reassessments. Make sure your mortgage escrow over-prepares for this.
+    
     * **Deeded vs. Leased Parking:** Parking is rarely automatically included. A "deeded" parking spot means you own it, adding $15,000 to $40,000 to your purchase price, and it has its own property tax bill and HOA fee. Alternatively, you can lease a spot in the building (usually $150–$300/month).
+    
     * **Owner Occupancy Ratios:** If you ever plan to rent the condo out later, check the building's rental cap. Many Chicago condo boards strictly cap the number of units that can be rented out, which can put you on a years-long waitlist.
     """)
