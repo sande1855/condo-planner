@@ -27,6 +27,9 @@ target_date = colB.date_input("Target Purchase Date", datetime.date.today() + da
 days_remaining = (target_date - datetime.date.today()).days
 paychecks_remaining = max(1, math.floor(days_remaining / 14))
 
+# Create a "price memory" dictionary so we don't fetch the same stock price multiple times
+fetched_prices = {}
+
 # --- 2. CURRENT FINANCES ---
 st.markdown("---")
 st.header("💰 2. Current Finances & Assets")
@@ -47,19 +50,41 @@ with col1:
 
 with col2:
     st.subheader("Current Stock & Equity")
-    stock_ticker = st.text_input("Current Stock Ticker (e.g., AAPL, GOOG)", "AAPL")
-    stock_shares = st.number_input("Number of Shares You Own", min_value=0.0, value=10.0)
+    st.write("List your current holdings below. Live prices will be pulled automatically.")
     
-    # Pull live stock price
+    # Set up default table data for multiple stocks
+    default_holdings = pd.DataFrame([
+        {"Ticker": "AAPL", "Shares": 10.0},
+        {"Ticker": "GOOG", "Shares": 5.0}
+    ])
+    
+    # Create the interactive table
+    holdings_df = st.data_editor(default_holdings, num_rows="dynamic", use_container_width=True)
+    
+    # Pull live stock prices for everything in the table
     live_stock_value = 0
-    if stock_ticker:
-        try:
-            ticker_data = yf.Ticker(stock_ticker)
-            current_price = ticker_data.history(period="1d")['Close'].iloc[0]
-            live_stock_value = current_price * stock_shares
-            st.success(f"Live {stock_ticker.upper()} Price: **\${current_price:.2f}** | Total Value: **\${live_stock_value:,.2f}**")
-        except:
-            st.error("Could not fetch stock price. Check the ticker symbol.")
+    st.write("**Live Market Updates:**")
+    
+    for index, row in holdings_df.iterrows():
+        ticker = str(row["Ticker"]).strip().upper()
+        shares = float(row["Shares"])
+        
+        if ticker and shares > 0:
+            # Check if we already fetched this price
+            if ticker not in fetched_prices:
+                try:
+                    ticker_data = yf.Ticker(ticker)
+                    fetched_prices[ticker] = ticker_data.history(period="1d")['Close'].iloc[0]
+                except:
+                    fetched_prices[ticker] = 0
+                    st.error(f"Could not fetch price for {ticker}. Please check the symbol.")
+            
+            # Calculate value
+            current_price = fetched_prices[ticker]
+            if current_price > 0:
+                position_value = current_price * shares
+                live_stock_value += position_value
+                st.success(f"{ticker}: **\${current_price:.2f}** per share | Value: **\${position_value:,.2f}**")
 
 # --- 3. FUTURE INFLOWS (Dynamic Tables) ---
 st.markdown("---")
@@ -71,9 +96,9 @@ col_table1, col_table2 = st.columns(2)
 
 with col_table1:
     st.subheader("Unvested Stock Grants")
-    # Set up default table data
+    # Updated table to take Ticker and Shares instead of a flat dollar value
     default_stock = pd.DataFrame([
-        {"Grant Name": "Grant 1", "Vesting Date": datetime.date.today() + datetime.timedelta(days=180), "Value ($)": 5000.0, "% Devoted to House": 50.0}
+        {"Ticker": "AAPL", "Shares Vesting": 25.0, "Vesting Date": datetime.date.today() + datetime.timedelta(days=180), "% Devoted to House": 50.0}
     ])
     # Create the interactive table
     stock_df = st.data_editor(default_stock, num_rows="dynamic", use_container_width=True)
@@ -87,11 +112,27 @@ with col_table2:
     # Create the interactive table
     bonus_df = st.data_editor(default_bonus, num_rows="dynamic", use_container_width=True)
 
-# Calculate eligible future inflows based on the target date
+# Calculate eligible future inflows based on the target date AND live stock prices
 unvested_contribution = 0
 for index, row in stock_df.iterrows():
     if pd.to_datetime(row["Vesting Date"]).date() <= target_date:
-        unvested_contribution += row["Value ($)"] * (row["% Devoted to House"] / 100)
+        ticker = str(row["Ticker"]).strip().upper()
+        shares = float(row["Shares Vesting"])
+        pct_devoted = float(row["% Devoted to House"]) / 100
+        
+        if ticker and shares > 0:
+            # Fetch price if we haven't already looked it up for Section 2
+            if ticker not in fetched_prices:
+                try:
+                    ticker_data = yf.Ticker(ticker)
+                    fetched_prices[ticker] = ticker_data.history(period="1d")['Close'].iloc[0]
+                except:
+                    fetched_prices[ticker] = 0
+            
+            # Apply the current price to the unvested shares
+            current_price = fetched_prices[ticker]
+            unvested_value = current_price * shares
+            unvested_contribution += unvested_value * pct_devoted
 
 bonus_contribution = 0
 for index, row in bonus_df.iterrows():
@@ -117,7 +158,7 @@ else:
     savings_per_paycheck = amount_needed / paychecks_remaining
     biweekly_free_cashflow = biweekly_net_pay - (monthly_expenses / 2)
     
-    # Dashboard style metric cards (Now 4 columns!)
+    # Dashboard style metric cards
     col_res1, col_res2, col_res3, col_res4 = st.columns(4)
     col_res1.metric(label="🎯 Total Goal", value=f"${target_amount:,.0f}")
     col_res2.metric(label="💰 Current Assets", value=f"${current_assets:,.0f}")
