@@ -70,9 +70,12 @@ else:
     savings_per_paycheck = amount_needed / paychecks_remaining
     biweekly_free_cashflow = biweekly_net_pay - (monthly_expenses / 2) # Rough translation of monthly expenses to biweekly
     
-    st.write(f"**Total Goal:** ${target_amount:,.2f}")
-    st.write(f"**Current & Future Allocated Assets:** ${total_assets:,.2f}")
-    st.write(f"**Amount Remaining to Save:** ${amount_needed:,.2f}")
+   # Dashboard style metric cards
+    colA, colB, colC = st.columns(3)
+    colA.metric(label="🎯 Total Goal", value=f"${target_amount:,.0f}")
+    colB.metric(label="💰 Current Assets", value=f"${total_assets:,.0f}")
+    colC.metric(label="📉 Amount to Save", value=f"${amount_needed:,.0f}")
+    
     st.write(f"**Paychecks Until Target Date:** {paychecks_remaining}")
     
     st.info(f"### 👉 You need to save **${savings_per_paycheck:,.2f}** from each biweekly paycheck.")
